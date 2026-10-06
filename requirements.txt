@@ -1,0 +1,7 @@
+pandas==3.0.6
+duckdb==1.5.6
+openpyxl==3.1.5
+python-dotenv==1.2.4
+requests==2.34.2
+streamlit>=1.57,<2
+plotly>=6,<7

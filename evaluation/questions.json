@@ -1,0 +1,253 @@
+[
+  {
+    "id": "q01",
+    "question": "What is the total revenue?",
+    "category": "aggregation",
+    "answerable": true,
+    "expected_sql": "SELECT SUM(revenue) AS total_revenue FROM orders",
+    "mock_sql": "SELECT SUM(o.revenue) AS total_revenue FROM orders AS o",
+    "plan": {"intent": "aggregation", "metric": "revenue", "time_period": "", "steps": ["Calculate total revenue"]}
+  },
+  {
+    "id": "q02",
+    "question": "How much revenue did each region generate?",
+    "category": "aggregation",
+    "answerable": true,
+    "expected_sql": "SELECT region, SUM(revenue) AS revenue FROM orders GROUP BY region",
+    "mock_sql": "SELECT region, SUM(revenue) AS revenue FROM orders GROUP BY region ORDER BY region",
+    "plan": {"intent": "aggregation", "metric": "revenue", "time_period": "", "steps": ["Aggregate revenue by region"]}
+  },
+  {
+    "id": "q03",
+    "question": "Which region generated the highest revenue?",
+    "category": "ranking",
+    "answerable": true,
+    "expected_sql": "SELECT region, revenue FROM (SELECT region, SUM(revenue) AS revenue FROM orders GROUP BY region) ranked ORDER BY revenue DESC LIMIT 1",
+    "mock_sql": "SELECT region, SUM(revenue) AS revenue FROM orders GROUP BY region ORDER BY revenue DESC LIMIT 1",
+    "plan": {"intent": "ranking", "metric": "revenue", "time_period": "", "steps": ["Rank regions by total revenue"]}
+  },
+  {
+    "id": "q04",
+    "question": "Which region had the highest profit margin?",
+    "category": "ranking",
+    "answerable": true,
+    "expected_sql": "SELECT region, SUM(revenue - cost) / NULLIF(SUM(revenue), 0) AS profit_margin FROM orders GROUP BY region ORDER BY profit_margin DESC LIMIT 1",
+    "mock_sql": "SELECT region, (SUM(revenue) - SUM(cost)) / SUM(revenue) AS profit_margin FROM orders GROUP BY region ORDER BY profit_margin DESC LIMIT 1",
+    "plan": {"intent": "ranking", "metric": "profit margin", "time_period": "", "steps": ["Rank regions by profit margin"]}
+  },
+  {
+    "id": "q05",
+    "question": "What are the top 5 products by revenue?",
+    "category": "ranking",
+    "answerable": true,
+    "expected_sql": "SELECT p.product_name, SUM(o.revenue) AS revenue FROM orders o JOIN products p ON o.product_id = p.product_id GROUP BY p.product_name ORDER BY revenue DESC LIMIT 5",
+    "mock_sql": "SELECT p.product_name, SUM(o.revenue) AS revenue FROM products p INNER JOIN orders o USING (product_id) GROUP BY p.product_name ORDER BY SUM(o.revenue) DESC LIMIT 5",
+    "plan": {"intent": "ranking", "metric": "revenue", "time_period": "", "steps": ["Rank products by revenue"]}
+  },
+  {
+    "id": "q06",
+    "question": "Which product category generates the highest revenue?",
+    "category": "ranking",
+    "answerable": true,
+    "expected_sql": "SELECT p.category, SUM(o.revenue) AS revenue FROM orders o JOIN products p ON o.product_id = p.product_id GROUP BY p.category ORDER BY revenue DESC LIMIT 1",
+    "mock_sql": "SELECT category, revenue FROM (SELECT p.category, SUM(o.revenue) revenue FROM products p JOIN orders o ON p.product_id = o.product_id GROUP BY 1) t ORDER BY 2 DESC LIMIT 1",
+    "plan": {"intent": "ranking", "metric": "revenue", "time_period": "", "steps": ["Rank product categories by revenue"]}
+  },
+  {
+    "id": "q07",
+    "question": "Which customer segment generates the most revenue?",
+    "category": "ranking",
+    "answerable": true,
+    "expected_sql": "SELECT c.segment, SUM(o.revenue) AS revenue FROM orders o JOIN customers c ON o.customer_id = c.customer_id GROUP BY c.segment ORDER BY revenue DESC LIMIT 1",
+    "mock_sql": "SELECT segment, SUM(revenue) AS revenue FROM orders JOIN customers USING (customer_id) GROUP BY segment ORDER BY revenue DESC LIMIT 1",
+    "plan": {"intent": "ranking", "metric": "revenue", "time_period": "", "steps": ["Rank customer segments by revenue"]}
+  },
+  {
+    "id": "q08",
+    "question": "How did revenue change by region between 2023 and 2024?",
+    "category": "comparison",
+    "answerable": true,
+    "expected_sql": "SELECT region, EXTRACT(YEAR FROM CAST(order_date AS DATE)) AS year, SUM(revenue) AS revenue FROM orders GROUP BY region, year ORDER BY region, year",
+    "mock_sql": "SELECT region, date_part('year', CAST(order_date AS DATE)) AS year, SUM(revenue) revenue FROM orders GROUP BY 1, 2 ORDER BY 1, 2",
+    "plan": {"intent": "comparison", "metric": "revenue", "time_period": "2023-2024", "steps": ["Compare revenue by region and year"]}
+  },
+  {
+    "id": "q09",
+    "question": "What was the quarterly revenue trend?",
+    "category": "trend_analysis",
+    "answerable": true,
+    "expected_sql": "SELECT EXTRACT(YEAR FROM CAST(order_date AS DATE)) AS year, EXTRACT(QUARTER FROM CAST(order_date AS DATE)) AS quarter, SUM(revenue) AS revenue FROM orders GROUP BY year, quarter ORDER BY year, quarter",
+    "mock_sql": "SELECT date_part('year', order_date::DATE) AS year, date_part('quarter', order_date::DATE) AS quarter, SUM(revenue) revenue FROM orders GROUP BY 1, 2 ORDER BY 1, 2",
+    "plan": {"intent": "trend_analysis", "metric": "revenue", "time_period": "quarterly", "steps": ["Aggregate revenue by quarter"]}
+  },
+  {
+    "id": "q10",
+    "question": "What was the monthly revenue trend?",
+    "category": "trend_analysis",
+    "answerable": true,
+    "expected_sql": "SELECT strftime(CAST(order_date AS DATE), '%Y-%m') AS month, SUM(revenue) AS revenue FROM orders GROUP BY month ORDER BY month",
+    "mock_sql": "SELECT strftime(order_date::DATE, '%Y-%m') AS month, SUM(revenue) revenue FROM orders GROUP BY 1 ORDER BY 1",
+    "plan": {"intent": "trend_analysis", "metric": "revenue", "time_period": "monthly", "steps": ["Aggregate revenue by month"]}
+  },
+  {
+    "id": "q11",
+    "question": "What was the average order value for each customer segment?",
+    "category": "multi_table_join",
+    "answerable": true,
+    "expected_sql": "SELECT c.segment, AVG(o.revenue) AS average_order_value FROM orders o JOIN customers c ON o.customer_id = c.customer_id GROUP BY c.segment",
+    "mock_sql": "SELECT segment, AVG(revenue) average_order_value FROM customers JOIN orders USING (customer_id) GROUP BY segment ORDER BY segment",
+    "plan": {"intent": "aggregation", "metric": "average order value", "time_period": "", "steps": ["Calculate average order value by customer segment"]}
+  },
+  {
+    "id": "q12",
+    "question": "Which product subcategories generated the most revenue?",
+    "category": "multi_table_join",
+    "answerable": true,
+    "expected_sql": "SELECT p.subcategory, SUM(o.revenue) AS revenue FROM orders o JOIN products p ON o.product_id = p.product_id GROUP BY p.subcategory ORDER BY revenue DESC LIMIT 5",
+    "mock_sql": "SELECT subcategory, SUM(revenue) revenue FROM products JOIN orders USING (product_id) GROUP BY subcategory ORDER BY 2 DESC LIMIT 5",
+    "plan": {"intent": "ranking", "metric": "revenue", "time_period": "", "steps": ["Rank product subcategories by revenue"]}
+  },
+  {
+    "id": "q13",
+    "question": "Which customers generated the highest revenue?",
+    "category": "multi_table_join",
+    "answerable": true,
+    "expected_sql": "SELECT c.customer_name, SUM(o.revenue) AS revenue FROM orders o JOIN customers c ON o.customer_id = c.customer_id GROUP BY c.customer_name ORDER BY revenue DESC LIMIT 5",
+    "mock_sql": "SELECT customer_name, SUM(revenue) revenue FROM customers INNER JOIN orders USING (customer_id) GROUP BY customer_name ORDER BY revenue DESC LIMIT 5",
+    "plan": {"intent": "ranking", "metric": "revenue", "time_period": "", "steps": ["Rank customers by revenue"]}
+  },
+  {
+    "id": "q14",
+    "question": "Which regions missed their revenue target by month?",
+    "category": "target_vs_actual",
+    "answerable": true,
+    "expected_sql": "WITH actual AS (SELECT region, strftime(CAST(order_date AS DATE), '%Y-%m') AS month, SUM(revenue) AS actual_revenue FROM orders GROUP BY region, month), target AS (SELECT region, strftime(CAST(month AS DATE), '%Y-%m') AS month, SUM(revenue_target) AS revenue_target FROM targets GROUP BY region, month) SELECT a.region, a.month, a.actual_revenue, t.revenue_target FROM actual a JOIN target t USING (region, month) WHERE a.actual_revenue < t.revenue_target ORDER BY a.month, a.region",
+    "mock_sql": "WITH a AS (SELECT region, strftime(order_date::DATE, '%Y-%m') AS month, SUM(revenue) AS actual_revenue FROM orders GROUP BY 1, 2), t AS (SELECT region, strftime(month::DATE, '%Y-%m') AS month, SUM(revenue_target) AS revenue_target FROM targets GROUP BY 1, 2) SELECT region, month, actual_revenue, revenue_target FROM a JOIN t USING (region, month) WHERE actual_revenue < revenue_target ORDER BY month, region",
+    "plan": {"intent": "comparison", "metric": "revenue", "time_period": "monthly targets", "steps": ["Compare monthly regional revenue to targets"]}
+  },
+  {
+    "id": "q15",
+    "question": "What was the actual revenue versus target for each region?",
+    "category": "target_vs_actual",
+    "answerable": true,
+    "expected_sql": "WITH actual AS (SELECT region, SUM(revenue) AS actual_revenue FROM orders GROUP BY region), target AS (SELECT region, SUM(revenue_target) AS revenue_target FROM targets GROUP BY region) SELECT a.region, a.actual_revenue, t.revenue_target FROM actual a JOIN target t USING (region) ORDER BY a.region",
+    "mock_sql": "SELECT a.region, a.actual_revenue, t.revenue_target FROM (SELECT region, SUM(revenue) actual_revenue FROM orders GROUP BY region) a JOIN (SELECT region, SUM(revenue_target) revenue_target FROM targets GROUP BY region) t USING (region) ORDER BY 1",
+    "plan": {"intent": "comparison", "metric": "revenue", "time_period": "", "steps": ["Compare actual revenue with regional targets"]}
+  },
+  {
+    "id": "q16",
+    "question": "What was the total profit?",
+    "category": "aggregation",
+    "answerable": true,
+    "expected_sql": "SELECT SUM(revenue - cost) AS total_profit FROM orders",
+    "mock_sql": "SELECT SUM(revenue) - SUM(cost) AS total_profit FROM orders",
+    "plan": {"intent": "aggregation", "metric": "profit", "time_period": "", "steps": ["Calculate total profit"]}
+  },
+  {
+    "id": "q17",
+    "question": "How did quarterly profit compare between Q2 and Q3?",
+    "category": "comparison",
+    "answerable": true,
+    "expected_sql": "SELECT EXTRACT(YEAR FROM CAST(order_date AS DATE)) AS year, EXTRACT(QUARTER FROM CAST(order_date AS DATE)) AS quarter, SUM(revenue - cost) AS profit FROM orders WHERE EXTRACT(QUARTER FROM CAST(order_date AS DATE)) IN (2, 3) GROUP BY year, quarter ORDER BY year, quarter",
+    "mock_sql": "SELECT date_part('year', order_date::DATE) AS year, date_part('quarter', order_date::DATE) AS quarter, SUM(revenue) - SUM(cost) profit FROM orders WHERE date_part('quarter', order_date::DATE) IN (2, 3) GROUP BY 1, 2 ORDER BY 1, 2",
+    "plan": {"intent": "comparison", "metric": "profit", "time_period": "Q2 vs Q3", "steps": ["Compare profit in Q2 and Q3 by year"]}
+  },
+  {
+    "id": "q18",
+    "question": "Why did profit decline in Q3?",
+    "category": "root_cause_analysis",
+    "answerable": true,
+    "expected_sql": "WITH quarterly AS (SELECT p.category, EXTRACT(YEAR FROM CAST(o.order_date AS DATE)) AS year, EXTRACT(QUARTER FROM CAST(o.order_date AS DATE)) AS quarter, SUM(o.revenue - o.cost) AS profit FROM orders o JOIN products p ON o.product_id = p.product_id GROUP BY p.category, year, quarter), changes AS (SELECT category, year, quarter, profit, LAG(profit) OVER (PARTITION BY category ORDER BY year, quarter) AS previous_profit FROM quarterly) SELECT category, year, quarter, profit, previous_profit, profit - previous_profit AS profit_variance FROM changes WHERE quarter = 3 ORDER BY year, profit_variance",
+    "mock_sql": "WITH q AS (SELECT category, year, quarter, SUM(profit) AS profit FROM (SELECT p.category, EXTRACT(YEAR FROM o.order_date::DATE) year, EXTRACT(QUARTER FROM o.order_date::DATE) quarter, o.revenue-o.cost profit FROM orders o JOIN products p USING(product_id)) s GROUP BY 1,2,3), d AS (SELECT *, LAG(profit) OVER(PARTITION BY category ORDER BY year,quarter) previous_profit FROM q) SELECT category, year, quarter, profit, previous_profit, profit-previous_profit profit_variance FROM d WHERE quarter=3 ORDER BY year, profit_variance",
+    "plan": {"intent": "root_cause_analysis", "metric": "profit", "time_period": "Q3", "steps": ["Compare quarterly profit over time", "Break down quarterly profit changes by region", "Break down quarterly profit changes by product category"]},
+    "mock_step_sql": [
+      "SELECT EXTRACT(YEAR FROM order_date::DATE) AS year, EXTRACT(QUARTER FROM order_date::DATE) AS quarter, SUM(revenue-cost) AS profit FROM orders GROUP BY 1,2 ORDER BY 1,2",
+      "WITH q AS (SELECT region, year, quarter, SUM(profit) profit FROM (SELECT region, EXTRACT(YEAR FROM order_date::DATE) AS year, EXTRACT(QUARTER FROM order_date::DATE) AS quarter, revenue-cost profit FROM orders) s GROUP BY 1,2,3), x AS (SELECT *, LAG(profit) OVER(PARTITION BY region ORDER BY year,quarter) previous_profit FROM q) SELECT region, year, quarter, profit, previous_profit, profit-previous_profit profit_variance FROM x WHERE quarter=3 ORDER BY year, profit_variance",
+      "WITH q AS (SELECT category, year, quarter, SUM(profit) AS profit FROM (SELECT p.category, EXTRACT(YEAR FROM o.order_date::DATE) AS year, EXTRACT(QUARTER FROM o.order_date::DATE) AS quarter, o.revenue-o.cost profit FROM orders o JOIN products p USING(product_id)) s GROUP BY 1,2,3), d AS (SELECT *, LAG(profit) OVER(PARTITION BY category ORDER BY year,quarter) previous_profit FROM q) SELECT category, year, quarter, profit, previous_profit, profit-previous_profit profit_variance FROM d WHERE quarter=3 ORDER BY year, profit_variance"
+    ]
+  },
+  {
+    "id": "q19",
+    "question": "Which product categories contributed most to the Q3 profit decline?",
+    "category": "root_cause_analysis",
+    "answerable": true,
+    "expected_sql": "WITH quarterly AS (SELECT p.category, EXTRACT(YEAR FROM CAST(o.order_date AS DATE)) AS year, EXTRACT(QUARTER FROM CAST(o.order_date AS DATE)) AS quarter, SUM(o.revenue - o.cost) AS profit FROM orders o JOIN products p ON o.product_id = p.product_id GROUP BY p.category, year, quarter), changes AS (SELECT category, year, quarter, profit, LAG(profit) OVER (PARTITION BY category ORDER BY year, quarter) AS previous_profit FROM quarterly) SELECT category, year, quarter, profit, previous_profit, profit - previous_profit AS profit_variance FROM changes WHERE quarter = 3 ORDER BY year, profit_variance",
+    "mock_sql": "WITH q AS (SELECT p.category, date_part('year', o.order_date::DATE) year, date_part('quarter', o.order_date::DATE) quarter, SUM(o.revenue-o.cost) profit FROM orders o JOIN products p ON p.product_id=o.product_id GROUP BY 1,2,3), x AS (SELECT *, LAG(profit) OVER(PARTITION BY category ORDER BY year,quarter) previous_profit FROM q) SELECT category, year, quarter, profit, previous_profit, profit-previous_profit profit_variance FROM x WHERE quarter=3 ORDER BY year, profit_variance",
+    "plan": {"intent": "root_cause_analysis", "metric": "profit", "time_period": "Q3", "steps": ["Compare Q3 profit with Q2", "Break down Q3 profit changes by product category"]},
+    "mock_step_sql": [
+      "SELECT EXTRACT(YEAR FROM order_date::DATE) AS year, EXTRACT(QUARTER FROM order_date::DATE) AS quarter, SUM(revenue-cost) AS profit FROM orders WHERE EXTRACT(QUARTER FROM order_date::DATE) IN (2,3) GROUP BY 1,2 ORDER BY 1,2",
+      "WITH q AS (SELECT p.category, date_part('year', o.order_date::DATE) AS year, date_part('quarter', o.order_date::DATE) AS quarter, SUM(o.revenue-o.cost) profit FROM orders o JOIN products p ON p.product_id=o.product_id GROUP BY 1,2,3), x AS (SELECT *, LAG(profit) OVER(PARTITION BY category ORDER BY year,quarter) previous_profit FROM q) SELECT category, year, quarter, profit, previous_profit, profit-previous_profit profit_variance FROM x WHERE quarter=3 ORDER BY year, profit_variance"
+    ]
+  },
+  {
+    "id": "q20",
+    "question": "Which regions contributed most to the Q3 profit decline?",
+    "category": "root_cause_analysis",
+    "answerable": true,
+    "expected_sql": "WITH quarterly AS (SELECT region, EXTRACT(YEAR FROM CAST(order_date AS DATE)) AS year, EXTRACT(QUARTER FROM CAST(order_date AS DATE)) AS quarter, SUM(revenue - cost) AS profit FROM orders GROUP BY region, year, quarter), changes AS (SELECT region, year, quarter, profit, LAG(profit) OVER (PARTITION BY region ORDER BY year, quarter) AS previous_profit FROM quarterly) SELECT region, year, quarter, profit, previous_profit, profit - previous_profit AS profit_variance FROM changes WHERE quarter = 3 ORDER BY year, profit_variance",
+    "mock_sql": "WITH q AS (SELECT region, date_part('year', order_date::DATE) year, date_part('quarter', order_date::DATE) quarter, SUM(revenue)-SUM(cost) profit FROM orders GROUP BY 1,2,3), x AS (SELECT *, LAG(profit) OVER(PARTITION BY region ORDER BY year,quarter) previous_profit FROM q) SELECT region, year, quarter, profit, previous_profit, profit-previous_profit profit_variance FROM x WHERE quarter=3 ORDER BY year, profit_variance",
+    "plan": {"intent": "root_cause_analysis", "metric": "profit", "time_period": "Q3", "steps": ["Compare Q3 profit with Q2", "Break down Q3 profit changes by region"]},
+    "mock_step_sql": [
+      "SELECT EXTRACT(YEAR FROM order_date::DATE) AS year, EXTRACT(QUARTER FROM order_date::DATE) AS quarter, SUM(revenue-cost) AS profit FROM orders WHERE EXTRACT(QUARTER FROM order_date::DATE) IN (2,3) GROUP BY 1,2 ORDER BY 1,2",
+      "WITH q AS (SELECT region, date_part('year', order_date::DATE) AS year, date_part('quarter', order_date::DATE) AS quarter, SUM(revenue)-SUM(cost) profit FROM orders GROUP BY 1,2,3), x AS (SELECT *, LAG(profit) OVER(PARTITION BY region ORDER BY year,quarter) previous_profit FROM q) SELECT region, year, quarter, profit, previous_profit, profit-previous_profit profit_variance FROM x WHERE quarter=3 ORDER BY year, profit_variance"
+    ]
+  },
+  {
+    "id": "q21",
+    "question": "How did revenue vary by customer segment and year?",
+    "category": "multi_table_join",
+    "answerable": true,
+    "expected_sql": "SELECT c.segment, EXTRACT(YEAR FROM CAST(o.order_date AS DATE)) AS year, SUM(o.revenue) AS revenue FROM orders o JOIN customers c ON o.customer_id = c.customer_id GROUP BY c.segment, year ORDER BY c.segment, year",
+    "mock_sql": "SELECT segment, date_part('year', order_date::DATE) AS year, SUM(revenue) revenue FROM orders JOIN customers USING (customer_id) GROUP BY 1, 2 ORDER BY 1, 2",
+    "plan": {"intent": "comparison", "metric": "revenue", "time_period": "yearly", "steps": ["Compare yearly revenue by customer segment"]}
+  },
+  {
+    "id": "q22",
+    "question": "Which employees had the highest salary?",
+    "category": "unsupported",
+    "answerable": false,
+    "expected_reason": "The available schema has no employee or salary data.",
+    "plan": {"intent": "ranking", "metric": "salary", "time_period": "", "steps": ["Check whether employee salary data is available"]}
+  },
+  {
+    "id": "q23",
+    "question": "How much did we spend on marketing campaigns?",
+    "category": "unsupported",
+    "answerable": false,
+    "expected_reason": "The available schema has no marketing or campaign spending data.",
+    "plan": {"intent": "aggregation", "metric": "marketing spend", "time_period": "", "steps": ["Check whether marketing data is available"]}
+  },
+  {
+    "id": "q24",
+    "question": "Which warehouse has the highest inventory turnover?",
+    "category": "unsupported",
+    "answerable": false,
+    "expected_reason": "The available schema has no warehouse or inventory data.",
+    "plan": {"intent": "ranking", "metric": "inventory turnover", "time_period": "", "steps": ["Check whether warehouse inventory data is available"]}
+  },
+  {
+    "id": "q25",
+    "question": "Which sales representative closed the most deals?",
+    "category": "unsupported",
+    "answerable": false,
+    "expected_reason": "The available schema has no sales representative or deal data.",
+    "plan": {"intent": "ranking", "metric": "deals", "time_period": "", "steps": ["Check whether sales representative deal data is available"]}
+  },
+  {
+    "id": "q26",
+    "question": "Which store locations have the highest foot traffic?",
+    "category": "unsupported",
+    "answerable": false,
+    "expected_reason": "The available schema has no store location or foot traffic data.",
+    "plan": {"intent": "ranking", "metric": "foot traffic", "time_period": "", "steps": ["Check whether store traffic data is available"]}
+  },
+  {
+    "id": "q27",
+    "question": "How many orders are in the dataset?",
+    "category": "simple_lookup",
+    "answerable": true,
+    "expected_sql": "SELECT COUNT(*) AS order_count FROM orders",
+    "mock_sql": "SELECT COUNT(order_id) AS order_count FROM orders",
+    "plan": {"intent": "simple_lookup", "metric": "orders", "time_period": "", "steps": ["Count the available orders"]}
+  }
+]

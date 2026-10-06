@@ -1,0 +1,17 @@
+.venv/
+__pycache__/
+**/__pycache__/
+*.pyc
+.env
+.streamlit/secrets.toml
+*.pyo
+*.pyd
+.pytest_cache/
+.ipynb_checkpoints/
+.DS_Store
+coverage.xml
+htmlcov/
+*.duckdb
+
+data/processed/*.duckdb
+/data/processed/ui_sessions/

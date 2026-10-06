@@ -1,0 +1,13 @@
+product_id,product_name,category,subcategory
+P001,Laptop Pro,Electronics,Laptops
+P002,Laptop Air,Electronics,Laptops
+P003,Ultra Monitor,Electronics,Monitors
+P004,Docking Station,Electronics,Accessories
+P005,Wireless Mouse,Accessories,Peripherals
+P006,Mechanical Keyboard,Accessories,Peripherals
+P007,Office Chair,Furniture,Seating
+P008,Standing Desk,Furniture,Desks
+P009,Filing Cabinet,Furniture,Storage
+P010,Analytics Suite,Software,Analytics
+P011,CRM License,Software,CRM
+P012,Video Conferencing,Software,Collaboration

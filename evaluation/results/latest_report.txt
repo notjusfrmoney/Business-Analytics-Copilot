@@ -1,0 +1,55 @@
+========================================================================================
+BUSINESS ANALYTICS COPILOT EVALUATION (DETERMINISTIC)
+Total questions: 27
+Answerable: 22
+Unsupported: 5
+SQL execution success: 22/22 (100.0%)
+SQL/result accuracy: 22/22 (100.0%)
+Answer grounding: 22/22 (100.0%)
+Query success rate (including expected unsupported refusals): 27/27 (100.0%)
+Unsupported refusal rate: 5/5 (100.0%)
+Agentic questions: 3
+Successful multi-step analyses: 3/3
+Average latency: 0.1275s
+Average mock LLM calls: 2.96
+Average SQL queries: 0.96
+Total LLM calls / SQL queries: 80 / 26
+
+ID   | Category            | SQL | Result | Answer | Steps | Calls | Queries | Time(s) | Question
+------------------------------------------------------------------------------------------------------------------------------------------------------
+q01  | aggregation         | PASS | PASS   | PASS   | 1     | 3     | 1       | 0.124   | What is the total revenue?
+q02  | aggregation         | PASS | PASS   | PASS   | 1     | 3     | 1       | 0.115   | How much revenue did each region generate?
+q03  | ranking             | PASS | PASS   | PASS   | 1     | 3     | 1       | 0.125   | Which region generated the highest revenue?
+q04  | ranking             | PASS | PASS   | PASS   | 1     | 3     | 1       | 0.116   | Which region had the highest profit margin?
+q05  | ranking             | PASS | PASS   | PASS   | 1     | 3     | 1       | 0.117   | What are the top 5 products by revenue?
+q06  | ranking             | PASS | PASS   | PASS   | 1     | 3     | 1       | 0.120   | Which product category generates the highest revenue?
+q07  | ranking             | PASS | PASS   | PASS   | 1     | 3     | 1       | 0.127   | Which customer segment generates the most revenue?
+q08  | comparison          | PASS | PASS   | PASS   | 1     | 3     | 1       | 0.123   | How did revenue change by region between 2023 and 2024?
+q09  | trend_analysis      | PASS | PASS   | PASS   | 1     | 3     | 1       | 0.121   | What was the quarterly revenue trend?
+q10  | trend_analysis      | PASS | PASS   | PASS   | 1     | 3     | 1       | 0.122   | What was the monthly revenue trend?
+q11  | multi_table_join    | PASS | PASS   | PASS   | 1     | 3     | 1       | 0.119   | What was the average order value for each customer segment?
+q12  | multi_table_join    | PASS | PASS   | PASS   | 1     | 3     | 1       | 0.124   | Which product subcategories generated the most revenue?
+q13  | multi_table_join    | PASS | PASS   | PASS   | 1     | 3     | 1       | 0.120   | Which customers generated the highest revenue?
+q14  | target_vs_actual    | PASS | PASS   | PASS   | 1     | 3     | 1       | 0.144   | Which regions missed their revenue target by month?
+q15  | target_vs_actual    | PASS | PASS   | PASS   | 1     | 3     | 1       | 0.125   | What was the actual revenue versus target for each region?
+q16  | aggregation         | PASS | PASS   | PASS   | 1     | 3     | 1       | 0.107   | What was the total profit?
+q17  | comparison          | PASS | PASS   | PASS   | 1     | 3     | 1       | 0.111   | How did quarterly profit compare between Q2 and Q3?
+q18  | root_cause_analysis | PASS | PASS   | PASS   | 3     | 5     | 3       | 0.317   | Why did profit decline in Q3?
+q19  | root_cause_analysis | PASS | PASS   | PASS   | 2     | 4     | 2       | 0.188   | Which product categories contributed most to the Q3 profit decline?
+q20  | root_cause_analysis | PASS | PASS   | PASS   | 2     | 4     | 2       | 0.184   | Which regions contributed most to the Q3 profit decline?
+q21  | multi_table_join    | PASS | PASS   | PASS   | 1     | 3     | 1       | 0.114   | How did revenue vary by customer segment and year?
+q22  | unsupported         | N/A | PASS   | N/A    | 1     | 2     | 0       | 0.094   | Which employees had the highest salary?
+     Error: The available schema has no employee or salary data.
+q23  | unsupported         | N/A | PASS   | N/A    | 1     | 2     | 0       | 0.097   | How much did we spend on marketing campaigns?
+     Error: The available schema has no marketing or campaign spending data.
+q24  | unsupported         | N/A | PASS   | N/A    | 1     | 2     | 0       | 0.099   | Which warehouse has the highest inventory turnover?
+     Error: The available schema has no warehouse or inventory data.
+q25  | unsupported         | N/A | PASS   | N/A    | 1     | 2     | 0       | 0.095   | Which sales representative closed the most deals?
+     Error: The available schema has no sales representative or deal data.
+q26  | unsupported         | N/A | PASS   | N/A    | 1     | 2     | 0       | 0.095   | Which store locations have the highest foot traffic?
+     Error: The available schema has no store location or foot traffic data.
+q27  | simple_lookup       | PASS | PASS   | PASS   | 1     | 3     | 1       | 0.101   | How many orders are in the dataset?
+
+PASS / FAIL uses the deterministic response fixtures, not a live model.
+See evaluation/results/latest_results.json for full traces and per-question metrics.
+========================================================================================
