@@ -1,49 +1,247 @@
 # Business Analytics Copilot
 
-Ask questions about tabular business data in plain English. The application profiles uploaded CSV or Excel files, loads them into DuckDB, and uses an LLM to plan and execute bounded, read-only SQL analysis. Answers are checked against query evidence, with result tables, charts, SQL, and an execution trace available in the Streamlit interface.
+An agentic natural-language analytics system that converts business questions into validated SQL, performs bounded multi-step analysis over structured data, and returns evidence-backed insights with visualizations.
 
-## Product walkthrough
+**Python · DuckDB · OpenRouter · Streamlit · Plotly**
 
-1. Upload one or more CSV or XLSX files.
-2. Review the detected tables, schemas, and sample rows.
-3. Ask a question such as “Which region generated the highest revenue?”
-4. Inspect the answer, supporting results, charts, generated SQL, and validation/execution trace.
-5. Use **Clear data and reset session** when finished.
+## Overview
 
-See the [demo guide](docs/demo.md) for a complete local walkthrough and example questions.
+Business questions often require identifying the right tables, writing SQL, joining data, calculating metrics, comparing trends, and investigating possible drivers of change. This makes even straightforward analysis dependent on both technical and business knowledge.
+
+**Business Analytics Copilot** provides a natural-language interface for this workflow. Users upload CSV or XLSX business data and ask questions in plain English. The system plans the analysis, generates and validates read-only SQL, executes it against DuckDB, performs additional analysis when needed, and returns an evidence-backed answer with supporting data and visualizations.
+
+## Example
+
+**Question**
+
+> Why did profit decline in Q3?
+
+**Workflow**
+
+```text
+Business Question
+       ↓
+Analysis Planning
+       ↓
+SQL Generation
+       ↓
+SQL Validation
+       ↓
+DuckDB Execution
+       ↓
+Follow-up Analysis
+       ↓
+Evidence Verification
+       ↓
+Answer + Supporting Data + Visualization
+```
+
+Simple questions can be answered with a single query, while more complex questions can trigger bounded multi-step investigation.
+
+## Key Features
+
+* Natural-language business question answering
+* Schema-aware SQL generation
+* DuckDB-based analytical execution
+* Read-only SQL validation and safeguards
+* Bounded multi-step agentic analysis
+* Follow-up query generation
+* Evidence-grounded answer generation
+* CSV/XLSX data upload
+* Automatic Plotly visualizations
+* SQL and analysis-trace transparency
+* Deterministic evaluation benchmark
 
 ## Architecture
 
-```text
-CSV/XLSX → validation and profiling → session DuckDB
-         → analysis plan → generated read-only SQL → validation → DuckDB
-         → evidence checks → answer, result tables, and charts
+```mermaid
+flowchart TD
+    A[User] --> B[Streamlit UI]
+
+    B --> C[CSV / XLSX Upload]
+    C --> D[Validation & Schema Profiling]
+    D --> E[Session DuckDB]
+
+    B --> F[Business Question]
+    F --> G[Analysis Planner]
+    G --> H[SQL Generator]
+    H --> I[SQL Validator]
+    I --> E
+    E --> J[Query Results]
+
+    J --> K[Analysis Controller]
+    K -->|More evidence needed| H
+    K -->|Sufficient evidence| L[Evidence Verification]
+
+    J --> M[Plotly Visualization]
+    L --> N[Final Answer]
+
+    N --> B
+    M --> B
 ```
 
-The same analytics and database services are reused by the UI and Python entry points. See [docs/architecture.md](docs/architecture.md) for component responsibilities and deployment boundaries.
+### Data Layer
 
-## Current capabilities
+```text
+CSV/XLSX
+   ↓
+Validation
+   ↓
+Schema Profiling
+   ↓
+DuckDB
+```
 
-- CSV/XLSX ingestion, column normalization, validation, schema inspection, and DuckDB storage.
-- OpenRouter-backed natural-language planning and DuckDB SQL generation.
-- Read-only query validation against the active database schema before execution.
-- Bounded multi-step analyses (four steps by default), compact follow-up context, and evidence-checked answers.
-- Streamlit chat interface with supporting tables, predefined Plotly charts, SQL transparency, and trace details.
-- A deterministic, no-network benchmark with 27 questions, including unsupported-question and multi-step cases.
+### Analytics Layer
 
-Not implemented: authentication, persistent managed storage, multi-agent orchestration, RAG/vector search, or guaranteed causal inference. The sample data is synthetic. Root-cause analyses describe patterns and decompositions in the data; they do not prove causation.
+```text
+Question
+   ↓
+Planner
+   ↓
+SQL Generator
+   ↓
+SQL Validator
+   ↓
+DuckDB
+   ↓
+Analysis Controller
+   ↓
+Follow-up Queries
+   ↓
+Evidence Verification
+```
 
-## Requirements and local setup
+### Presentation Layer
 
-Python 3.11 or later is recommended. From the repository root in PowerShell:
+```text
+Final Answer
++
+Supporting Results
++
+Visualization
++
+SQL / Analysis Trace
+```
+
+See [`docs/architecture.md`](docs/architecture.md) for detailed component responsibilities.
+
+## Agentic Workflow
+
+The system goes beyond basic text-to-SQL.
+
+For a simple question:
+
+```text
+Question → SQL → Result
+```
+
+For a question such as:
+
+> Why did profit decline in Q3?
+
+the system can perform a sequence of analyses:
+
+```text
+1. Compare profit across periods
+2. Analyze the change by region
+3. Analyze the change by product category
+4. Synthesize the available evidence
+```
+
+Execution is bounded by a maximum number of analysis steps to prevent uncontrolled querying.
+
+## Tech Stack
+
+| Component           | Technology                                     |
+| ------------------- | ---------------------------------------------- |
+| Language            | Python                                         |
+| Data Processing     | Pandas                                         |
+| Analytical Database | DuckDB                                         |
+| LLM Provider        | OpenRouter                                     |
+| Model               | Configurable hosted free model                 |
+| Interface           | Streamlit                                      |
+| Visualization       | Plotly                                         |
+| Configuration       | python-dotenv                                  |
+| SQL Validation      | Custom read-only validation with DuckDB checks |
+| Testing             | Python `unittest`                              |
+
+## Sample Dataset
+
+The repository includes a reproducible synthetic business dataset containing:
+
+* `orders`
+* `customers`
+* `products`
+* `targets`
+
+Core relationships:
+
+```text
+orders.customer_id → customers.customer_id
+orders.product_id  → products.product_id
+```
+
+The dataset supports revenue, profit, regional, product, customer-segment, trend, and target-versus-actual analysis.
+
+## Project Structure
+
+```text
+Business-Analytics-Copilot/
+│
+├── app.py
+├── src/
+│   ├── analytics/
+│   ├── database/
+│   ├── data/
+│   ├── llm/
+│   ├── ui/
+│   └── utils/
+│
+├── data/
+│   └── sample/
+│
+├── evaluation/
+├── tests/
+├── scripts/
+├── docs/
+│
+├── requirements.txt
+├── .env.example
+├── .gitignore
+└── README.md
+```
+
+## Getting Started
+
+### 1. Clone the repository
+
+```powershell
+git clone <repository-url>
+cd Business-Analytics-Copilot
+```
+
+### 2. Create a virtual environment
 
 ```powershell
 py -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -r requirements.txt
-if (-not (Test-Path .env)) { Copy-Item .env.example .env }
 ```
 
-Set the OpenRouter values in `.env`:
+Activate it in PowerShell:
+
+```powershell
+.venv\Scripts\Activate.ps1
+```
+
+### 3. Install dependencies
+
+```powershell
+pip install -r requirements.txt
+```
+
+### 4. Configure OpenRouter
+
+Create a `.env` file from `.env.example` and set:
 
 ```dotenv
 OPENROUTER_API_KEY=
@@ -51,67 +249,115 @@ OPENROUTER_MODEL=openrouter/free
 OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
 ```
 
-The API key is required for live LLM-backed questions. The model is configurable; `openrouter/free` is an example, not a quality or availability guarantee. Never commit `.env` or paste credentials into source files.
+The project uses a hosted model through OpenRouter; no model weights are downloaded locally.
 
-### Run the application
+Never commit `.env` or expose API credentials in source files.
 
-```powershell
-.\.venv\Scripts\python.exe -m streamlit run app.py
-```
-
-Open the local URL printed by Streamlit, upload files, and ask a question. The application does not execute SQL directly from the browser: generated statements are validated by the backend before DuckDB execution. Uploaded session databases are stored under `data/processed/ui_sessions/` and can be removed with **Clear data and reset session**.
-
-### Python entry points
-
-With the configured sample database available:
+### 5. Generate sample data
 
 ```powershell
-.\.venv\Scripts\python.exe -c "from src.analytics import answer_question; result = answer_question('Which region generated the highest revenue?'); print(result.data if result.success else result.error)"
+python scripts/generate_sample_data.py
 ```
 
-For a bounded multi-step analysis:
+### 6. Run the application
 
 ```powershell
-.\.venv\Scripts\python.exe -c "from src.analytics import AnalysisAgent; result = AnalysisAgent().answer_question('Why did profit decline in Q3?'); print(result.answer if result.success else result.error)"
+streamlit run app.py
 ```
 
-The deterministic sample data is already supplied in `data/sample/`. To create or reset the default DuckDB database from those CSVs:
+Open the local Streamlit URL, upload the sample data, and ask a business question.
 
-```powershell
-.\.venv\Scripts\python.exe tests\test_data_foundation.py
+## Usage
+
+1. Upload one or more CSV/XLSX files.
+2. Load the data into the current session.
+3. Inspect tables, schemas, and sample rows.
+4. Ask a business question.
+5. Review the generated answer, supporting data, visualization, SQL, and analysis trace.
+
+### Example Questions
+
+```text
+Which region generated the highest revenue?
+
+Which product category generates the highest revenue?
+
+Which customer segment generates the most revenue?
+
+Which regions missed their revenue target?
+
+Why did profit decline in Q3?
 ```
 
-## Configuration and secrets
+See [`docs/demo.md`](docs/demo.md) for a complete walkthrough.
 
-Configuration precedence is process environment / local `.env`, then Streamlit secrets, then non-secret defaults where applicable. The OpenRouter settings are `OPENROUTER_API_KEY`, `OPENROUTER_MODEL`, and `OPENROUTER_BASE_URL`. In Streamlit Community Cloud, add them under the app's **Settings → Secrets** using TOML syntax; see the [deployment guide](docs/demo.md#deploy-to-streamlit-community-cloud). A blank, optional template is provided at `.streamlit/secrets.toml.example`; copy it to `.streamlit/secrets.toml` for local Streamlit secrets. The actual secrets file and `.env` are ignored by Git.
+## Evaluation
 
-The API key is sent to OpenRouter for model requests. Uploaded business data is sent only as schema, compact query context, and bounded result summaries when needed; it is not sent as a whole dataset. Do not upload sensitive or regulated information to a hosted model without the required organizational approval.
+The project includes a deterministic benchmark containing **27 business questions**:
 
-## Tests and deterministic evaluation
+* 22 answerable questions
+* 5 intentionally unsupported questions
 
-Run the complete deterministic test suite:
+The latest recorded deterministic evaluation produced:
 
-```powershell
-.\.venv\Scripts\python.exe -m unittest discover -s tests -p "test_*.py" -v
+| Metric                        | Result |
+| ----------------------------- | -----: |
+| Answerable SQL executions     |  22/22 |
+| Matching result sets          |  22/22 |
+| Evidence checks               |  22/22 |
+| Unsupported-question handling |    5/5 |
+| Multi-step analyses           |    3/3 |
+
+These results are based on controlled deterministic fixtures and **do not represent live hosted-model accuracy or production latency**.
+
+The evaluation framework also covers malformed outputs, invalid SQL, unknown columns, failed follow-up queries, API errors, and other failure cases.
+
+See [`evaluation/README.md`](evaluation/README.md) for the methodology and detailed results.
+
+## Reliability and Guardrails
+
+The system includes:
+
+* schema-aware SQL generation
+* read-only SQL validation
+* bounded agent execution
+* controlled chart generation
+* evidence checks for numerical claims
+* conservative fallbacks when the available evidence is insufficient
+
+Model-generated Python or chart code is never executed directly.
+
+## Limitations
+
+* The included business data is synthetic.
+* Free hosted models can be subject to rate limits and availability changes.
+* LLM output can vary across requests.
+* Root-cause analysis identifies evidence-supported contributors rather than proving causal relationships.
+* The automated benchmark evaluates pipeline correctness more strongly than open-ended semantic quality.
+* Session data is intended for analysis within the current application session rather than durable storage.
+
+## Documentation
+
+* [`Architecture`](docs/architecture.md)
+* [`Demo Guide`](docs/demo.md)
+* [`Evaluation Guide`](evaluation/README.md)
+
+## Possible Extensions
+
+* richer and larger business datasets
+* stronger semantic evaluation of natural-language answers
+* support for additional LLM providers and model routing
+
+## Project Status
+
+The core portfolio implementation is complete:
+
+```text
+✅ Data Foundation
+✅ Natural Language → SQL
+✅ Agentic Analysis
+✅ Streamlit Application
+✅ Visualization
+✅ Evaluation & Reliability
+✅ Documentation
 ```
-
-Run the no-network evaluation:
-
-```powershell
-.\.venv\Scripts\python.exe evaluation\run_evaluation.py
-```
-
-The latest recorded deterministic-fixture run reports 22/22 successful answerable SQL executions, 22/22 matching result sets, 22/22 evidence checks, 5/5 expected unsupported refusals, and 3/3 multi-step analyses. Average local latency in that run was 0.1275 seconds. These controlled fixtures verify pipeline behavior; they do **not** estimate hosted-model quality, live semantic accuracy, or production latency. Details and per-question output are in [evaluation/README.md](evaluation/README.md) and `evaluation/results/`.
-
-## Streamlit Community Cloud
-
-1. Push this project to a GitHub repository using your normal workflow.
-2. In Streamlit Community Cloud, create an app from that repository and choose `app.py` as the main file.
-3. In the app settings, add the three OpenRouter settings in TOML form. Do not place credentials in repository files.
-4. Deploy, upload a small CSV/XLSX dataset, and test one supported and one unsupported question.
-
-Community Cloud's local filesystem is ephemeral and is not a managed database. Uploaded session DuckDB files may disappear when an instance restarts and should not be treated as durable storage. This project has no authentication or multi-tenant access controls; use only appropriate non-sensitive demo data. See the [demo and deployment guide](docs/demo.md) for more detail.
-
-## Project status
-
-Phases 1–5 (data foundation, NL-to-SQL, bounded analysis, Streamlit UI, and deterministic evaluation) are implemented. Phase 6 prepares the documentation and deployment configuration; production hosting, authentication, durable storage, and live-model quality guarantees are outside the current scope.
